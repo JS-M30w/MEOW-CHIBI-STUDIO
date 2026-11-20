@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin · Meow Chibi Studio</title>
+<style>
+  :root{
+    --bg:#1a1220; --ink:#f5e9ef; --muted:#b9a0b0; --accent:#e86f9a; --accent-ink:#fff;
+    --card:#2a1f2e; --line:#3d2f3c; --soft:#3a2a38; --ok:#3ecf8e; --danger:#ff6b8a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family: ui-rounded, "Nunito", "Segoe UI", system-ui, sans-serif;
+    color:var(--ink);
+    background: radial-gradient(900px 400px at 50% -20%, #3a2035 0%, var(--bg) 55%);
+    min-height:100vh;
+  }
+  .app{max-width:880px;margin:0 auto;padding:24px 16px 60px}
+  header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}
+  h1{margin:0;font-size:clamp(22px,4vw,28px)}
+  header p{margin:4px 0 0;color:var(--muted);font-size:14px}
+  .link{
+    appearance:none;border:2px solid var(--line);background:var(--card);color:var(--ink);
+    border-radius:14px;padding:10px 16px;font:inherit;font-weight:700;text-decoration:none;cursor:pointer;
+  }
+  .link:hover{border-color:var(--accent)}
+  .card{
+    background:var(--card);border:2px solid var(--line);border-radius:22px;padding:20px;margin-bottom:18px;
+  }
+  .card h2{margin:0 0 6px;font-size:18px}
+  .card .hint{margin:0 0 16px;color:var(--muted);font-size:13px}
+  .grid-form{display:grid;gap:14px}
+  @media(min-width:640px){.grid-form{grid-template-columns:1fr 1fr}}
+  label.field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:var(--muted)}
+  label.field span{letter-spacing:.3px}
+  input[type=text], select, input[type=file]{
+    font:inherit;font-size:15px;font-weight:600;color:var(--ink);
+    background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:11px 12px;
+  }
+  input[type=file]{padding:10px}
+  input:focus, select:focus{outline:none;border-color:var(--accent)}
+  .preview-wrap{
+    grid-column:1/-1;display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;
+  }
+  .preview{
+    width:148px;height:244px;background:#0f0a12;
+    background-image:radial-gradient(#2a1a28 1.2px, transparent 1.2px);
+    background-size:14px 14px;
+    border:2px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;flex:none;
+  }
+  .preview canvas, .preview img{max-width:100%;max-height:100%;image-rendering:auto}
+  .preview .empty{color:var(--muted);font-size:13px;text-align:center;padding:12px}
+  .code-box{
+    flex:1;min-width:200px;background:var(--soft);border-radius:14px;padding:14px;border:2px dashed var(--line);
+  }
+  .code-box .label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+  .code-box .code{
+    font-size:28px;font-weight:800;letter-spacing:3px;color:var(--accent);
+    font-variant-numeric:tabular-nums;
+  }
+  .code-box .meta{margin-top:8px;font-size:13px;color:var(--muted)}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}
+  .btn{
+    appearance:none;border:none;border-radius:14px;padding:12px 18px;font:inherit;font-weight:700;
+    cursor:pointer;transition:transform .12s, opacity .12s;
+  }
+  .btn:active{transform:scale(.98)}
+  .btn.primary{background:var(--accent);color:var(--accent-ink)}
+  .btn.primary:hover{opacity:.92}
+  .btn.ghost{background:var(--soft);color:var(--ink);border:2px solid var(--line)}
+  .btn.danger{background:transparent;color:var(--danger);border:2px solid var(--danger)}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
+  .list{display:grid;gap:10px}
+  .row{
+    display:grid;grid-template-columns:64px 1fr auto;gap:12px;align-items:center;
+    background:var(--soft);border-radius:14px;padding:10px 12px;border:1px solid var(--line);
+  }
+  .row .thumb{
+    width:64px;height:64px;background:#0f0a12;border-radius:10px;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;border:1px solid var(--line);
+  }
+  .row .thumb canvas{max-width:100%;max-height:100%}
+  .row .info b{display:block;font-size:15px}
+  .row .info span{font-size:12px;color:var(--muted)}
+  .row .code-tag{
+    font-weight:800;letter-spacing:1.5px;color:var(--accent);font-size:15px;
+    background:#1a1220;padding:6px 10px;border-radius:8px;
+  }
+  .row .del{
+    appearance:none;border:none;background:transparent;color:var(--danger);
+    font:inherit;font-weight:700;font-size:13px;cursor:pointer;padding:6px 8px;
+  }
+  .empty-list{text-align:center;color:var(--muted);padding:28px 12px;font-size:14px}
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);
+    background:#0f0a12;color:#fff;padding:11px 18px;border-radius:999px;
+    font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:90vw;text-align:center;
+    border:1px solid var(--line);
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .stats{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .stat{background:var(--soft);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--muted)}
+  .stat b{color:var(--ink);font-size:18px;display:block}
+  .export-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  input[type=password], input[type=number]{
+    font:inherit;font-size:15px;font-weight:600;color:var(--ink);
+    background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:11px 12px;
+  }
+  #loginGate{
+    position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(700px 360px at 50% 20%, #3a2035 0%, var(--bg) 60%);
+    padding:20px;
+  }
+  #loginGate.hidden{display:none}
+  #loginGate .card{max-width:380px;width:100%;margin:0}
+  #loginGate .err{color:var(--danger);font-size:13px;min-height:18px;margin-top:8px}
+  #adminApp.hidden{display:none}
+  .stock-badge{font-size:12px;color:var(--muted)}
+  .stock-badge.low{color:var(--danger)}
+  .stock-badge.ok{color:var(--ok)}
+
+  [hidden]{display:none !important}
+  .aura-fields{grid-column:1/-1;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .preview{flex-direction:column}
+  .preview video{max-width:100%;max-height:100%}
+  .vinyl{width:96px;height:96px;border-radius:50%;position:relative;flex:none;
+    background:repeating-radial-gradient(circle,#0b070d 0 2px,#241a28 2px 3px);box-shadow:0 2px 8px rgba(0,0,0,.5)}
+  .vinyl::before{content:'';position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(from 30deg,transparent 0 18%,rgba(255,255,255,.16) 25%,transparent 32% 68%,rgba(255,255,255,.12) 75%,transparent 82%)}
+  .vinyl .label{position:absolute;inset:30%;border-radius:50%;background:var(--accent) center/cover no-repeat}
+  .vinyl .label::after{content:'';position:absolute;width:6px;height:6px;border-radius:50%;background:#fff;inset:0;margin:auto}
+  .vinyl.small{width:52px;height:52px}
+  .check{grid-column:1/-1;display:flex;align-items:flex-start;gap:12px;background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--muted);line-height:1.4;cursor:pointer}
+  .check input{width:20px;height:20px;accent-color:var(--accent);flex:none;margin-top:1px}
+  .check b{color:var(--ink)}
+  .mask-box{grid-column:1/-1;background:var(--soft);border:2px dashed var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;justify-items:center}
+  .mask-box .label{justify-self:start;font-size:12px;font-weight:700;color:var(--muted);line-height:1.4}
+  .mask-box .actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+  #maskCanvas{width:min(100%,444px);aspect-ratio:296/488;height:auto;border-radius:10px;cursor:crosshair;background:#0f0a12;touch-action:manipulation}
+  .pack-box{grid-column:1/-1;background:var(--soft);border:2px dashed var(--line);border-radius:14px;padding:14px;display:grid;gap:10px}
+  .pack-box .label{font-size:12px;font-weight:700;color:var(--muted)}
+  .pack-row{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;background:#1a1220;border-radius:12px;padding:8px 10px}
+  .pack-row .thumb{width:48px;height:48px;background:#0f0a12;border-radius:8px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .pack-row .info b{display:block;font-size:14px}
+  .pack-row .info span{font-size:12px;color:var(--muted)}
+  .pack-row .del{appearance:none;border:none;background:transparent;color:var(--danger);font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+  .vinyl.small .label::after{width:4px;height:4px}
+</style>
+</head>
+<body>
+
+<div id="loginGate" aria-label="Acceso administrador">
+  <section class="card">
+    <h2>Acceso restringido</h2>
+    <p class="hint">Introduce la clave de administrador para continuar.</p>
+    <form id="loginForm" class="grid-form" style="grid-template-columns:1fr">
+      <label class="field">
+        <span>Contraseña</span>
+        <input type="password" id="loginPass" autocomplete="current-password" required>
+      </label>
+      <button class="btn primary" type="submit">Entrar</button>
+      <div class="err" id="loginErr" role="alert"></div>
+    </form>
+    <p class="hint" style="margin-top:14px;margin-bottom:0"><a class="link" href="index.html" style="display:inline-block">← Volver al juego</a></p>
+  </section>
+</div>
+
+<main class="app hidden" id="adminApp">
+  <header>
+    <div>
+      <h1>Panel de administrador</h1>
+      <p>Sube piezas, partículas, fondos, estampillas y música, y genera códigos de canje para el estudio.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="link" type="button" id="btnLogout">Cerrar sesión</button>
+      <a class="link" href="index.html">← Volver al juego</a>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>Nueva pieza</h2>
+    <p class="hint" id="catHint"></p>
+    <div class="grid-form">
+      <label class="field">
+        <span id="fileLabel">Archivo PNG</span>
+        <input type="file" id="file" accept="image/png,image/*">
+      </label>
+      <label class="field">
+        <span>Categoría</span>
+        <select id="cat">
+          <optgroup label="Personaje">
+            <option value="G">Cola (G)</option>
+            <option value="A">Alas (A)</option>
+            <option value="O">Ojos (O)</option>
+            <option value="B">Bocas (B)</option>
+            <option value="R">Rostro (R)</option>
+            <option value="Z">Zapatos (Z)</option>
+            <option value="P">Pantalones (P)</option>
+            <option value="C">Camiseta (C)</option>
+            <option value="J">Orejas (J)</option>
+            <option value="K" selected>Cabello (K)</option>
+            <option value="S">Sombrero (S)</option>
+          </optgroup>
+          <optgroup label="Ambiente">
+            <option value="U">Aura (U) · partículas</option>
+            <option value="F">Fondo (F)</option>
+          </optgroup>
+          <optgroup label="Pack">
+            <option value="D">Disfraz (D) · varias piezas, un código</option>
+            <option value="Y">Emociones (Y) · ojos o boca por emoción</option>
+          </optgroup>
+          <optgroup label="★ Súper secretos (no salen en el catálogo)">
+            <option value="E">Estampilla (E) · imagen o video</option>
+            <option value="M">Música (M) · audio</option>
+          </optgroup>
+        </select>
+      </label>
+      <label class="field" id="packCatField" hidden>
+        <span>Categoría de esta pieza del disfraz</span>
+        <select id="packCat">
+          <option value="G">Cola (G)</option>
+          <option value="A">Alas (A)</option>
+          <option value="O">Ojos (O)</option>
+          <option value="B">Bocas (B)</option>
+          <option value="R">Rostro (R)</option>
+          <option value="Z">Zapatos (Z)</option>
+          <option value="P">Pantalones (P)</option>
+          <option value="C">Camiseta (C)</option>
+          <option value="J">Orejas (J)</option>
+          <option value="K" selected>Cabello (K)</option>
+          <option value="S">Sombrero (S)</option>
+          <option value="U">Aura (U)</option>
+          <option value="F">Fondo (F)</option>
+        </select>
+      </label>
+      <label class="field" id="emoField" hidden>
+        <span>Emoción</span>
+        <select id="emoSel">
+          <option value="feliz">😃 Feliz</option>
+          <option value="triste">😢 Triste</option>
+          <option value="llorando">😭 Llorando</option>
+          <option value="asustado">😱 Asustado</option>
+          <option value="enojado">😡 Enojado</option>
+          <option value="loco">🤪 Loco</option>
+          <option value="genial">😎 Genial</option>
+          <option value="sorprendido">😲 Sorprendido</option>
+          <option value="guino">😉 Guiño</option>
+          <option value="sonriente">😁 Sonriente</option>
+        </select>
+      </label>
+      <label class="field" id="emoTargetField" hidden>
+        <span>Qué parte cambia con esta PNG</span>
+        <select id="emoTarget">
+          <option value="ojos">Ojos</option>
+          <option value="boca">Boca</option>
+        </select>
+      </label>
+      <label class="check" id="tintRow">
+        <input type="checkbox" id="tintToggle" checked>
+        <span><b>Colores personalizables</b> · detecta los blancos y grises neutros como pintables. Apágalo si el diseño ya trae sus colores y no debe cambiar.</span>
+      </label>
+      <label class="field" id="tintModeField" hidden>
+        <span>Qué se pinta</span>
+        <select id="tintMode">
+          <option value="all">Todo lo blanco y gris</option>
+          <option value="mask">Solo las zonas que yo marque</option>
+        </select>
+      </label>
+      <div class="mask-box" id="maskBox" hidden>
+        <div class="label">Toca las zonas blancas que sí se podrán pintar (se marcan en rosa). Vuelve a tocar para quitarlas. Lo que no marques se queda tal cual.</div>
+        <canvas id="maskCanvas" width="296" height="488" aria-label="Editor de zonas pintables"></canvas>
+        <div class="actions">
+          <button class="btn ghost" id="maskAll" type="button">Marcar todo lo blanco</button>
+          <button class="btn ghost" id="maskClear" type="button">Limpiar marcas</button>
+        </div>
+      </div>
+      <label class="field" id="blinkField" hidden>
+        <span id="blinkLabel">Ojos cerrados para el parpadeo (PNG 296 × 488)</span>
+        <input type="file" id="blinkFile" accept="image/*">
+      </label>
+      <label class="field" id="coverField" hidden>
+        <span>Portada del vinilo (imagen opcional)</span>
+        <input type="file" id="coverFile" accept="image/*">
+      </label>
+      <div class="aura-fields" id="auraFields" hidden>
+        <label class="field">
+          <span>Comportamiento</span>
+          <select id="auraMode">
+            <option value="rise">Subir (chispas)</option>
+            <option value="fall">Caer (pétalos)</option>
+            <option value="orbit">Orbitar alrededor</option>
+            <option value="twinkle">Brillar (titilar)</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Cantidad (1–80)</span>
+          <input type="number" id="auraCount" min="1" max="80" value="24" step="1">
+        </label>
+        <label class="field">
+          <span>Tamaño en px (4–96)</span>
+          <input type="number" id="auraSize" min="4" max="96" value="16" step="1">
+        </label>
+        <label class="field">
+          <span>Se dibuja</span>
+          <select id="auraLayer">
+            <option value="back">Detrás del personaje</option>
+            <option value="front">Delante del personaje</option>
+          </select>
+        </label>
+      </div>
+      <label class="field">
+        <span id="nameLabel">Nombre (opcional)</span>
+        <input type="text" id="name" maxlength="40" placeholder="Ej. Cabello estrellado">
+      </label>
+      <label class="field">
+        <span>Unidades (stock global en este navegador)</span>
+        <input type="number" id="stock" min="1" max="9999" value="1" step="1">
+      </label>
+      <label class="field">
+        <span>Código (se genera solo)</span>
+        <input type="text" id="codePreview" readonly placeholder="K####" style="letter-spacing:2px">
+      </label>
+      <div class="pack-box" id="packBox" hidden>
+        <div class="label" id="packLabel">Piezas del disfraz</div>
+        <div id="packList"><div class="empty-list" style="padding:12px">Aún no agregaste piezas.</div></div>
+        <button class="btn ghost" id="btnAddPart" type="button" disabled>+ Agregar esta pieza al disfraz</button>
+      </div>
+      <div class="preview-wrap">
+        <div class="preview" id="preview"><div class="empty">Vista previa</div></div>
+        <div class="code-box">
+          <div class="label">Código de canje</div>
+          <div class="code" id="codeDisplay">—</div>
+          <div class="meta" id="codeMeta">Elige categoría y sube un archivo</div>
+        </div>
+      </div>
+      <div class="actions" style="grid-column:1/-1">
+        <button class="btn primary" id="btnSave" type="button" disabled>Guardar en catálogo</button>
+        <button class="btn ghost" id="btnRegen" type="button">Regenerar código</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Catálogo de canjeables</h2>
+    <p class="hint">Estos códigos se pueden canjear en el juego (botón Canjear). Se guardan en este navegador. Las piezas ★ secretas no aparecen en el catálogo del juego.</p>
+    <div class="stats">
+      <div class="stat"><b id="statCount">0</b> piezas</div>
+      <div class="stat"><b id="statCats">0</b> categorías</div>
+      <div class="stat"><b id="statSecret">0</b> secretas ★</div>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="export-row">
+      <button class="btn ghost" id="btnExport" type="button">Exportar JSON</button>
+      <button class="btn ghost" id="btnImport" type="button">Importar JSON</button>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <button class="btn danger" id="btnClear" type="button">Vaciar catálogo</button>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+
+const SESSION_KEY = "meow-admin-session";
+
+/* Solo se guarda el hash SHA-256 (hex). La contraseña en claro no está en el código. */
+const ADMIN_HASH = "d593f9e5a7de1e84d23192f35d110c32ec4b76cc83d93d779a4e9f7f40888899";
+
+async function sha256Hex(text){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+function isAuthed(){
+  try { return sessionStorage.getItem(SESSION_KEY) === "1"; } catch { return false; }
+}
+function setAuthed(ok){
+  try {
+    if (ok) sessionStorage.setItem(SESSION_KEY, "1");
+    else sessionStorage.removeItem(SESSION_KEY);
+  } catch {}
+}
+function showApp(ok){
+  document.getElementById("loginGate").classList.toggle("hidden", ok);
+  document.getElementById("adminApp").classList.toggle("hidden", !ok);
+}
+
+document.getElementById("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const err = document.getElementById("loginErr");
+  err.textContent = "";
+  const pass = document.getElementById("loginPass").value;
+  if (!pass) { err.textContent = "Escribe la contraseña."; return; }
+  try {
+    const h = await sha256Hex(pass);
+    // comparación en tiempo constante aproximada
+    let diff = 0;
+    const a = h, b = ADMIN_HASH;
+    if (a.length !== b.length) diff = 1;
+    for (let i = 0; i < Math.max(a.length, b.length); i++) diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+    if (diff !== 0) {
+      err.textContent = "Contraseña incorrecta.";
+      document.getElementById("loginPass").value = "";
+      document.getElementById("loginPass").focus();
+      return;
+    }
+    setAuthed(true);
+    showApp(true);
+    document.getElementById("loginPass").value = "";
+  } catch (ex) {
+    console.error(ex);
+    err.textContent = "No se pudo verificar (navegador sin Web Crypto).";
+  }
+});
+
+document.getElementById("btnLogout").addEventListener("click", () => {
+  setAuthed(false);
+  showApp(false);
+  document.getElementById("loginPass").focus();
+});
+
+if (isAuthed()) showApp(true);
+else showApp(false);
+
+const W = 296, H = 488;
+const $ = id => document.getElementById(id);
+
+/* ===== Almacenamiento compartido entre index.html y admin.html (IndexedDB) ===== */
+const LEGACY_KEY = "meow-chibi-redeem-catalog";
+const LETTERS = {
+  G: { slot: "cola",       cat: "Cola" },
+  A: { slot: "alas",       cat: "Alas" },
+  O: { slot: "ojos",       cat: "Ojos" },
+  B: { slot: "boca",       cat: "Boca" },
+  R: { slot: "rostro",     cat: "Rostro" },
+  Z: { slot: "zapatos",    cat: "Zapatos" },
+  P: { slot: "pantalones", cat: "Pantalones" },
+  C: { slot: "camiseta",   cat: "Camiseta" },
+  J: { slot: "orejas",     cat: "Orejas" },
+  K: { slot: "cabello",    cat: "Cabello" },
+  S: { slot: "sombrero",   cat: "Sombrero" },
+  U: { slot: "aura",       cat: "Aura" },
+  F: { slot: "fondo",      cat: "Fondo" },
+  E: { slot: null,         cat: "Estampilla", secret: true },
+  M: { slot: null,         cat: "Música",     secret: true },
+  D: { slot: null,         cat: "Disfraz" },
+  Y: { slot: null,         cat: "Emoción" }
+};
+const KIND_OF = l => l === "E" ? "stamp" : l === "M" ? "music" : l === "U" ? "aura" : l === "F" ? "bg" : l === "D" ? "pack" : l === "Y" ? "emotion" : "layer";
+/* Valor por defecto de "colores personalizables"; en el admin se puede cambiar pieza por pieza. */
+const TINT_OF = l => !"BRFEMDY".includes(l);
+
+const DB = (() => {
+  let dbp = null;
+  function open(){
+    if (!dbp) dbp = new Promise((res, rej) => {
+      const r = indexedDB.open("meow-chibi", 1);
+      r.onupgradeneeded = () => { r.result.createObjectStore("catalog", { keyPath: "code" }); };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+    return dbp;
+  }
+  function tx(mode, fn){
+    return open().then(db => new Promise((res, rej) => {
+      const t = db.transaction("catalog", mode), s = t.objectStore("catalog");
+      let out; const rq = fn(s);
+      if (rq) rq.onsuccess = () => { out = rq.result; };
+      t.oncomplete = () => res(out);
+      t.onerror = () => rej(t.error);
+      t.onabort = () => rej(t.error);
+    }));
+  }
+  return {
+    all:   () => tx("readonly",  s => s.getAll()),
+    get:   code => tx("readonly",  s => s.get(code)),
+    put:   item => tx("readwrite", s => s.put(item)),
+    del:   code => tx("readwrite", s => s.delete(code)),
+    clear: () => tx("readwrite", s => s.clear())
+  };
+})();
+
+/* Pasa lo que guardaba la versión anterior del admin (localStorage) a IndexedDB. */
+async function migrateLegacy(){
+  let raw = null;
+  try { raw = localStorage.getItem(LEGACY_KEY); } catch (e) { return; }
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    const items = Array.isArray(data.items) ? data.items : [];
+    for (const it of items) {
+      if (!it || !it.code || !it.img) continue;
+      if (await DB.get(it.code)) continue;
+      const L = LETTERS[it.letter] || LETTERS.K;
+      const blob = await (await fetch(it.img)).blob();
+      await DB.put({
+        code: it.code, id: it.code, letter: it.letter, slot: L.slot, cat: L.cat, kind: "layer", secret: false,
+        tint: !!it.tint, name: it.name, media: blob, mime: blob.type || "image/png", filename: it.code + ".png",
+        stock: Number.isFinite(it.stock) ? it.stock : 1, redeemed: Number.isFinite(it.redeemed) ? it.redeemed : 0,
+        createdAt: it.createdAt || Date.now()
+      });
+    }
+    localStorage.removeItem(LEGACY_KEY);
+  } catch (e) { console.error(e); }
+}
+
+
+const HINTS = {
+  layer: "PNG recomendado: 296 × 488 px con transparencia. Cada código solo se puede canjear <b>una vez por dispositivo</b>.",
+  A: "Alas: dibuja las dos alas en el mismo PNG de 296 × 488. En el juego cada lado gira desde la espalda (la mitad izquierda y la derecha se separan por el eje del cuerpo) y quedan detrás del personaje.",
+  G: "Cola: PNG de 296 × 488. En el juego se mece desde el punto más cercano al trasero del personaje.",
+  O: "Ojos: pide 2 imágenes de 296 × 488: los ojos normales (abiertos) y los ojos cerrados para el parpadeo. Sin las dos no se puede guardar.",
+  aura: "Aura: sube una partícula pequeña (se reduce a 256 px como máximo). El juego la repite en pantalla con el comportamiento que elijas.",
+  bg: "Fondo: cualquier imagen. El juego la ajusta para cubrir los 296 × 488 del personaje y la dibuja lo más atrás de todo.",
+  stamp: "★ Súper secreto: no sale en el catálogo ni se ve en el personaje. Al canjear, el jugador descarga la imagen o el video y queda en su galería.",
+  music: "★ Súper secreto: no sale en el catálogo. Al canjear, el jugador descarga el audio y lo puede oír en el juego, con un vinilo como ilustración.",
+  D: "Disfraz: elige la categoría de cada pieza, sube el archivo y pulsa «Agregar esta pieza». Cuando tengas todas, guarda el disfraz: un solo código entrega todo el pack y el jugador se lo pone completo con un toque. Si agregas dos piezas de la misma categoría, la última reemplaza a la anterior.",
+  Y: "Emociones: cada PNG de 296 × 488 cambia los ojos o la boca del personaje cuando el jugador elige esa emoción. Elige la emoción (😃😢😭😱😡🤪😎😲😉😁) y qué parte cambia, sube el PNG y pulsa «Agregar». Una emoción puede tener solo ojos, solo boca o las dos, y el pack no tiene que estar completo: un código puede traer una sola emoción o las que quieras. Los ojos de una emoción pueden llevar su imagen de parpadeo (opcional)."
+};
+
+let pending = null;                         // { kind, blob, filename }
+let extras = { blink: null, cover: null };
+let usedCodes = new Set();
+let urls = [];
+let packParts = [];
+let packUrls = [];
+let mask = null, maskSrc = null;            // zonas pintables marcadas (Uint8Array 296×488) y píxeles de la pieza
+const EMO = { feliz:"😃", triste:"😢", llorando:"😭", asustado:"😱", enojado:"😡", loco:"🤪", genial:"😎", sorprendido:"😲", guino:"😉", sonriente:"😁" };
+const EMO_NAME = { feliz:"Feliz", triste:"Triste", llorando:"Llorando", asustado:"Asustado", enojado:"Enojado", loco:"Loco", genial:"Genial", sorprendido:"Sorprendido", guino:"Guiño", sonriente:"Sonriente" };
+const MSG_BLINK = "Los ojos necesitan 2 imágenes: normales y de parpadeo";
+const MSG_MASK = "Marca al menos una zona pintable (o elige «Todo lo blanco y gris»)";
+
+function toast(text){
+  const t = $("toast");
+  t.textContent = text;
+  t.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove("show"), 2600);
+}
+const clamp = (n, a, b) => Math.min(b, Math.max(a, Number.isFinite(n) ? n : a));
+function objUrl(blob){ const u = URL.createObjectURL(blob); urls.push(u); return u; }
+function revokeUrls(){ urls.forEach(u => URL.revokeObjectURL(u)); urls = []; }
+const isPackCat = () => $("cat").value === "D" || $("cat").value === "Y";
+const effLetter = () => $("cat").value === "D" ? $("packCat").value : $("cat").value === "Y" ? ($("emoTarget").value === "ojos" ? "O" : "B") : $("cat").value;
+const needsBlink = () => $("cat").value === "O" || ($("cat").value === "D" && $("packCat").value === "O");
+
+function genCode(letter){
+  for (let i = 0; i < 80; i++) {
+    const code = letter + String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+    if (!usedCodes.has(code)) return code;
+  }
+  return letter + String(Date.now() % 10000).padStart(4, "0");
+}
+function refreshCode(){
+  const letter = $("cat").value, code = genCode(letter);
+  $("codePreview").value = code;
+  $("codeDisplay").textContent = code;
+  const L = LETTERS[letter], k = KIND_OF(letter);
+  if (letter === "D" || letter === "Y") $("codeMeta").textContent = (letter === "D" ? "Disfraz · " : "Emociones · ") + packParts.length + (packParts.length === 1 ? " pieza" : " piezas");
+  else $("codeMeta").textContent = L.cat + (L.secret ? " · ★ secreto" : "") + (k === "layer" || k === "aura" ? (TINT_OF(letter) ? " · pintable por defecto" : " · sin tinte por defecto") : "");
+  return code;
+}
+
+/* ---- imágenes ---- */
+function canvasBlob(c){ return new Promise(r => c.toBlob(r, "image/png")); }
+async function normalizePng(file){            // 296×488 (centrado si viene de otro tamaño)
+  const bmp = await createImageBitmap(file);
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const ctx = c.getContext("2d");
+  if (bmp.width === W && bmp.height === H) ctx.drawImage(bmp, 0, 0);
+  else { const s = Math.min(W / bmp.width, H / bmp.height), dw = bmp.width * s, dh = bmp.height * s; ctx.drawImage(bmp, (W - dw) / 2, (H - dh) / 2, dw, dh); }
+  return { blob: await canvasBlob(c), resized: !(bmp.width === W && bmp.height === H) };
+}
+async function shrinkSprite(file, max){       // reduce partículas y portadas
+  const bmp = await createImageBitmap(file);
+  const s = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(bmp.width * s)); c.height = Math.max(1, Math.round(bmp.height * s));
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  return canvasBlob(c);
+}
+
+/* ---- campos según la categoría ---- */
+function updateSaveState(){
+  const ready = !!pending && (!needsBlink() || !!extras.blink);
+  $("btnSave").disabled = isPackCat() ? packParts.length === 0 : !ready;
+  $("btnAddPart").disabled = !ready;
+}
+function setupFields(){
+  const top = $("cat").value, isPack = isPackCat(), l = effLetter(), k = KIND_OF(l);
+  const label = { layer: "Archivo PNG (296 × 488)", aura: "Partícula PNG (se repite en pantalla)", bg: "Imagen de fondo", stamp: "Imagen, GIF o video", music: "Archivo de audio" }[k];
+  $("fileLabel").textContent = l === "O" ? (top === "Y" ? "Ojos de la emoción (PNG 296 × 488)" : "Ojos normales · abiertos (PNG 296 × 488)")
+                             : top === "Y" ? "Boca de la emoción (PNG 296 × 488)" : label;
+  $("file").accept = { layer: "image/png,image/*", aura: "image/*", bg: "image/*", stamp: "image/*,video/*", music: "audio/*" }[k];
+  $("blinkField").hidden = l !== "O";
+  $("blinkLabel").textContent = needsBlink() ? "Ojos cerrados · parpadeo (PNG 296 × 488, obligatorio)" : "Ojos cerrados · parpadeo (PNG 296 × 488, opcional)";
+  $("coverField").hidden = k !== "music";
+  $("auraFields").hidden = k !== "aura";
+  $("packCatField").hidden = top !== "D";
+  $("emoField").hidden = top !== "Y";
+  $("emoTargetField").hidden = top !== "Y";
+  $("packBox").hidden = !isPack;
+  $("packLabel").textContent = top === "Y" ? "Emociones del pack (una sola o las que quieras)" : "Piezas del disfraz";
+  $("btnAddPart").textContent = top === "Y" ? "+ Agregar esta emoción" : "+ Agregar esta pieza al disfraz";
+  $("tintRow").hidden = !(k === "layer" || k === "aura");
+  $("tintToggle").checked = TINT_OF(l);
+  $("nameLabel").textContent = top === "D" ? "Nombre del disfraz (opcional)" : top === "Y" ? "Nombre del pack de emociones (opcional)" : "Nombre (opcional)";
+  $("btnSave").textContent = top === "D" ? "Guardar disfraz" : top === "Y" ? "Guardar emociones" : "Guardar en catálogo";
+  const body = top === "Y" ? HINTS.layer : (HINTS[l] && k === "layer" ? HINTS.layer + "<br>" + HINTS[l] : HINTS[k]);
+  $("catHint").innerHTML = (isPack ? HINTS[top] + "<br><br>" : "") + body;
+  updateSaveState();
+  updateMaskUI();
+}
+
+function showPreview(){
+  const box = $("preview"); revokeUrls(); box.innerHTML = "";
+  if (!pending) { box.style.flexDirection = ""; box.innerHTML = '<div class="empty">Vista previa</div>'; return; }
+  const k = pending.kind;
+  if (k === "music") {
+    const v = document.createElement("div"); v.className = "vinyl";
+    const lab = document.createElement("div"); lab.className = "label";
+    if (extras.cover) lab.style.backgroundImage = "url(" + objUrl(extras.cover) + ")";
+    v.appendChild(lab); box.appendChild(v);
+    const a = document.createElement("audio"); a.controls = true; a.src = objUrl(pending.blob); a.style.width = "136px"; a.style.marginTop = "8px";
+    box.style.flexDirection = "column"; box.appendChild(a);
+    return;
+  }
+  box.style.flexDirection = "";
+  if ((pending.blob.type || "").startsWith("video/")) {
+    const v = document.createElement("video"); v.src = objUrl(pending.blob); v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; box.appendChild(v);
+  } else {
+    const img = document.createElement("img"); img.src = objUrl(pending.blob); img.alt = "Vista previa"; box.appendChild(img);
+  }
+}
+function resetPending(){
+  pending = null; extras = { blink: null, cover: null }; maskSrc = null; mask = null;
+  ["file", "blinkFile", "coverFile"].forEach(id => { $(id).value = ""; });
+  $("tintMode").value = "all";
+  updateMaskUI(); updateSaveState(); showPreview();
+}
+
+function onCatChange(){
+  const had = !!pending, was = pending && pending.kind;
+  setupFields();
+  if (had && was !== KIND_OF(effLetter())) { resetPending(); toast("Cambiaste de tipo: vuelve a elegir el archivo"); }
+  refreshCode();
+}
+$("cat").addEventListener("change", () => { if (packParts.length) { packParts = []; renderPackList(); } onCatChange(); });
+["packCat", "emoTarget"].forEach(id => $(id).addEventListener("change", onCatChange));
+$("btnRegen").addEventListener("click", () => { refreshCode(); toast("Código regenerado"); });
+
+$("file").addEventListener("change", async e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const letter = effLetter(), k = KIND_OF(letter);
+  try {
+    let blob, note = "";
+    if (k === "layer") { const r = await normalizePng(file); blob = r.blob; if (r.resized) note = " (ajustado a 296×488)"; }
+    else if (k === "aura") blob = await shrinkSprite(file, 256);
+    else if (k === "bg") { if (!file.type.startsWith("image/")) throw new Error("no es imagen"); blob = file; }
+    else if (k === "stamp") { if (!/^(image|video)\//.test(file.type)) throw new Error("no es imagen ni video"); blob = file; }
+    else { if (!file.type.startsWith("audio/")) throw new Error("no es audio"); blob = file; }
+    if (blob.size > 60 * 1024 * 1024) { toast("El archivo pesa más de 60 MB"); e.target.value = ""; return; }
+    pending = { kind: k, blob, filename: file.name };
+    if (!isPackCat()) refreshCode();
+    maskSrc = null; mask = null;
+    showPreview();
+    updateSaveState();
+    updateMaskUI();
+    toast("Archivo listo" + note);
+  } catch (err) {
+    console.error(err);
+    toast("No se pudo leer el archivo");
+    e.target.value = ""; pending = null; updateSaveState(); showPreview();
+  }
+});
+$("blinkFile").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) { extras.blink = null; updateSaveState(); return; }
+  try { extras.blink = (await normalizePng(f)).blob; toast("Ojos cerrados listos"); } catch { extras.blink = null; toast("No se pudo leer la imagen"); }
+  updateSaveState();
+});
+$("coverFile").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; if (!f) { extras.cover = null; showPreview(); return; }
+  try { extras.cover = await shrinkSprite(f, 256); showPreview(); toast("Portada lista"); } catch { extras.cover = null; toast("No se pudo leer la imagen"); }
+});
+
+/* Pieza actual del formulario (sirve para una pieza suelta, una pieza de disfraz o una emoción). */
+async function currentPart(name){
+  const letter = effLetter(), L = LETTERS[letter], k = KIND_OF(letter), emo = $("cat").value === "Y";
+  let maskBlob = null;
+  if (k === "layer" && $("tintToggle").checked && $("tintMode").value === "mask") {
+    if (!mask || !mask.some(v => v)) throw new Error("mask-empty");
+    maskBlob = await maskToBlob();                                                   // solo se pintan las zonas marcadas
+  }
+  return {
+    letter, slot: L.slot, cat: emo ? "Emoción" : L.cat, kind: k, secret: !!L.secret,
+    emotion: emo ? $("emoSel").value : undefined,
+    tint: (k === "layer" || k === "aura") ? $("tintToggle").checked : false,         // ← detección de blancos/grises neutros
+    mask: maskBlob,
+    name: name || (emo ? EMO_NAME[$("emoSel").value] : L.cat),
+    media: pending.blob, mime: pending.blob.type || "", filename: pending.filename,
+    blink: letter === "O" ? extras.blink : null,
+    cover: k === "music" ? extras.cover : null,
+    aura: k === "aura" ? {
+      mode: $("auraMode").value, count: clamp(parseInt($("auraCount").value, 10), 1, 80),
+      size: clamp(parseInt($("auraSize").value, 10), 4, 96), layer: $("auraLayer").value
+    } : null
+  };
+}
+
+/* ---- constructor del disfraz / pack de emociones ---- */
+const partLabel = p => p.emotion ? EMO[p.emotion] + " " + EMO_NAME[p.emotion] + " · " + (p.slot === "ojos" ? "ojos" : "boca") : p.cat;
+function renderPackList(){
+  packUrls.forEach(u => URL.revokeObjectURL(u)); packUrls = [];
+  const box = $("packList"); box.innerHTML = "";
+  if (!packParts.length) { box.innerHTML = '<div class="empty-list" style="padding:12px">Aún no agregaste nada.</div>'; return; }
+  packParts.forEach((p, i) => {
+    const row = document.createElement("div"); row.className = "pack-row";
+    const th = document.createElement("div"); th.className = "thumb";
+    const img = document.createElement("img"); const u = URL.createObjectURL(p.media); packUrls.push(u); img.src = u; img.alt = p.cat;
+    img.style.maxWidth = "100%"; img.style.maxHeight = "100%"; th.appendChild(img);
+    const info = document.createElement("div"); info.className = "info";
+    info.innerHTML = "<b></b><span></span>";
+    info.querySelector("b").textContent = partLabel(p);
+    const bits = [];
+    if (p.kind === "layer" || p.kind === "aura") bits.push(p.tint ? (p.mask ? "pintable · zona marcada" : "pintable") : "sin tinte");
+    if (p.blink) bits.push("con parpadeo");
+    info.querySelector("span").textContent = bits.join(" · ");
+    const del = document.createElement("button"); del.type = "button"; del.className = "del"; del.textContent = "Quitar";
+    del.addEventListener("click", () => { packParts.splice(i, 1); renderPackList(); updateSaveState(); refreshCode(); });
+    row.append(th, info, del); box.appendChild(row);
+  });
+}
+$("btnAddPart").addEventListener("click", async () => {
+  if (!pending) return;
+  if (needsBlink() && !extras.blink) { toast(MSG_BLINK); return; }
+  let part;
+  try { part = await currentPart(); } catch (e) { toast(MSG_MASK); return; }
+  const key = q => (q.emotion || "") + "|" + q.slot;
+  const at = packParts.findIndex(q => key(q) === key(part));
+  if (at >= 0) { packParts[at] = part; toast("Reemplazaste: " + partLabel(part)); }
+  else { packParts.push(part); toast("Agregada: " + partLabel(part)); }
+  resetPending(); renderPackList(); updateSaveState(); refreshCode();
+});
+
+$("btnSave").addEventListener("click", async () => {
+  const letter = $("cat").value, L = LETTERS[letter], k = KIND_OF(letter);
+  let stock = parseInt($("stock").value, 10);
+  stock = clamp(Number.isFinite(stock) ? stock : 1, 1, 9999);
+  let code = $("codePreview").value.trim().toUpperCase();
+  if (!/^[A-Z]\d{4}$/.test(code) || code[0] !== letter || usedCodes.has(code)) code = genCode(letter);
+  let rec;
+  if (k === "pack" || k === "emotion") {
+    if (!packParts.length) return;
+    rec = {
+      code, id: code, letter, slot: null, cat: L.cat, kind: k, secret: false, tint: false,
+      name: $("name").value.trim() || ((k === "pack" ? "Disfraz " : "Emociones ") + code.slice(1)),
+      media: packParts[0].media, mime: packParts[0].mime, filename: code + ".pack",      // miniatura de la lista
+      parts: packParts.map(p => Object.assign({}, p)),
+      stock, redeemed: 0, createdAt: Date.now()
+    };
+  } else {
+    if (!pending || pending.kind !== k) return;
+    if (needsBlink() && !extras.blink) { toast(MSG_BLINK); return; }
+    let part;
+    try { part = await currentPart($("name").value.trim() || (L.cat + " " + code.slice(1))); } catch (e) { toast(MSG_MASK); return; }
+    rec = Object.assign(part, { code, id: code, letter, stock, redeemed: 0, createdAt: Date.now() });
+  }
+  try { await DB.put(rec); } catch (e) { console.error(e); toast("No se pudo guardar (¿poco espacio?)"); return; }
+  toast("Guardado: " + code);
+  $("name").value = "";
+  packParts = []; renderPackList();
+  resetPending();
+  await renderList();
+  refreshCode();
+});
+
+/* ---- lista ---- */
+function thumbFor(it){
+  const box = document.createElement("div"); box.className = "thumb";
+  if (it.kind === "music") {
+    const v = document.createElement("div"); v.className = "vinyl small";
+    const lab = document.createElement("div"); lab.className = "label";
+    if (it.cover) lab.style.backgroundImage = "url(" + objUrl(it.cover) + ")";
+    v.appendChild(lab); box.appendChild(v); return box;
+  }
+  if ((it.mime || "").startsWith("video/")) {
+    const v = document.createElement("video"); v.src = objUrl(it.media); v.muted = true; v.preload = "metadata"; v.style.maxWidth = "100%"; v.style.maxHeight = "100%";
+    v.addEventListener("loadeddata", () => { try { v.currentTime = 0.1; } catch (e) {} });
+    box.appendChild(v); return box;
+  }
+  const img = document.createElement("img"); img.src = objUrl(it.media); img.alt = it.name;
+  img.style.maxWidth = "100%"; img.style.maxHeight = "100%";
+  box.appendChild(img); return box;
+}
+
+async function renderList(){
+  let items = [];
+  try { await migrateLegacy(); items = (await DB.all()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)); }
+  catch (e) { console.error(e); toast("Este navegador no permite guardar el catálogo"); }
+  usedCodes = new Set(items.map(i => i.code));
+  $("statCount").textContent = items.length;
+  $("statCats").textContent = new Set(items.map(i => i.letter)).size;
+  $("statSecret").textContent = items.filter(i => i.secret).length;
+  const list = $("list");
+  revokeUrls(); showPreview();
+  if (!items.length) { list.innerHTML = '<div class="empty-list">Aún no hay piezas. Sube la primera arriba.</div>'; return; }
+  list.innerHTML = "";
+  items.forEach(it => {
+    const row = document.createElement("div"); row.className = "row";
+    row.appendChild(thumbFor(it));
+    const info = document.createElement("div"); info.className = "info";
+    info.innerHTML = "<b></b><span></span>";
+    const stock = Number.isFinite(it.stock) ? it.stock : 1, redeemed = Number.isFinite(it.redeemed) ? it.redeemed : 0, left = Math.max(0, stock - redeemed);
+    info.querySelector("b").textContent = it.name;
+    let extra = "";
+    if (it.kind === "pack") extra = " · " + (it.parts || []).length + " piezas";
+    else if (it.kind === "emotion") extra = " · " + new Set((it.parts || []).map(q => q.emotion)).size + " emociones";
+    else if ((it.kind === "layer" || it.kind === "aura") && !it.tint) extra = " · sin tinte";
+    else if (it.kind === "layer" && it.mask) extra = " · zona pintable marcada";
+    const cat = document.createElement("span"); cat.textContent = it.cat + (it.secret ? " ★ secreto" : "") + extra + " · ";
+    const badge = document.createElement("span"); badge.className = "stock-badge " + (left === 0 ? "low" : "ok"); badge.textContent = left + "/" + stock + " disponibles";
+    info.querySelector("span").append(cat, badge);
+    const right = document.createElement("div");
+    right.style.cssText = "display:flex;flex-direction:column;align-items:flex-end;gap:6px";
+    const tag = document.createElement("div"); tag.className = "code-tag"; tag.textContent = it.code;
+    const del = document.createElement("button"); del.type = "button"; del.className = "del"; del.textContent = "Eliminar";
+    del.addEventListener("click", async () => {
+      if (!confirm("¿Eliminar " + it.code + "?")) return;
+      await DB.del(it.code); await renderList(); toast("Eliminado " + it.code);
+    });
+    right.append(tag, del);
+    row.append(info, right);
+    list.appendChild(row);
+  });
+}
+
+/* ---- exportar / importar ---- */
+function blobToData(b){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); }); }
+async function dataToBlob(d){ return (await fetch(d)).blob(); }
+async function packBlobs(o, forward){                 // convierte los blobs de una pieza <-> data URL
+  for (const f of ["media", "blink", "cover", "mask"]) {
+    if (forward) { if (o[f]) o[f + "Data"] = await blobToData(o[f]); delete o[f]; }
+    else { if (o[f + "Data"]) o[f] = await dataToBlob(o[f + "Data"]); else if (f === "media" && o.img) o.media = await dataToBlob(o.img); delete o[f + "Data"]; if (o[f] === undefined) o[f] = null; }
+  }
+  return o;
+}
+
+$("btnExport").addEventListener("click", async () => {
+  const items = await DB.all(), out = [];
+  for (const it of items) {
+    const o = Object.assign({}, it);
+    if (o.parts) o.parts = await Promise.all(o.parts.map(p => packBlobs(Object.assign({}, p), true)));
+    out.push(await packBlobs(o, true));
+  }
+  const blob = new Blob([JSON.stringify({ version: 3, items: out })], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "meow-chibi-catalog.json"; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast("Catálogo exportado");
+});
+$("btnImport").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async e => {
+  const file = e.target.files && e.target.files[0]; if (!file) return;
+  try {
+    const data = JSON.parse(await file.text());
+    const incoming = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : []);
+    if (!incoming.length) { toast("JSON sin piezas"); return; }
+    let added = 0;
+    for (const it of incoming) {
+      if (!it || !it.code) continue;
+      const code = String(it.code).toUpperCase();
+      if (usedCodes.has(code)) continue;
+      const letter = it.letter || code[0], L = LETTERS[letter] || LETTERS.K, kind = KIND_OF(letter);
+      if (!(it.mediaData || it.img)) continue;
+      const o = await packBlobs(Object.assign({}, it), false);
+      if (o.parts) o.parts = await Promise.all(o.parts.map(p => packBlobs(Object.assign({}, p), false)));
+      await DB.put(Object.assign(o, {
+        code, id: code, letter, slot: L.slot, cat: L.cat, kind, secret: !!L.secret,
+        tint: it.tint !== undefined ? !!it.tint : TINT_OF(letter),
+        name: it.name || (L.cat + " " + code.slice(1)), mime: o.media.type || it.mime || "", filename: it.filename || (code + ".png"),
+        stock: Number.isFinite(it.stock) ? it.stock : 1, redeemed: Number.isFinite(it.redeemed) ? it.redeemed : 0, createdAt: it.createdAt || Date.now()
+      }));
+      usedCodes.add(code); added++;
+    }
+    await renderList();
+    toast("Importadas " + added + " piezas nuevas");
+  } catch (err) { console.error(err); toast("No se pudo importar el JSON"); }
+  e.target.value = "";
+});
+$("btnClear").addEventListener("click", async () => {
+  if (!confirm("¿Vaciar todo el catálogo de canjeables?")) return;
+  await DB.clear(); await renderList(); toast("Catálogo vacío");
+});
+
+/* ---- zonas pintables: toca una zona blanca para marcarla o desmarcarla ---- */
+const maskCtx = () => $("maskCanvas").getContext("2d", { willReadFrequently: true });
+function updateMaskUI(){
+  const showMode = KIND_OF(effLetter()) === "layer" && $("tintToggle").checked;
+  $("tintModeField").hidden = !showMode;
+  if (!showMode) $("tintMode").value = "all";
+  const on = showMode && $("tintMode").value === "mask" && !!pending;
+  $("maskBox").hidden = !on;
+  if (on && !maskSrc) loadMaskSource();
+}
+async function loadMaskSource(){
+  if (!pending || pending.kind !== "layer") return;
+  const bmp = await createImageBitmap(pending.blob);
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(bmp, 0, 0);
+  maskSrc = x.getImageData(0, 0, W, H).data; mask = new Uint8Array(W * H);
+  drawMask();
+}
+const isCand = p => {                                    // ¿este píxel es blanco o gris claro (pintable)?
+  const d = maskSrc, i = p * 4; if (d[i + 3] < 128) return false;
+  const R = d[i], G = d[i + 1], B = d[i + 2];
+  return Math.max(R, G, B) - Math.min(R, G, B) <= 8 && (R + G + B) / 3 >= 110;
+};
+function drawMask(){
+  const out = maskCtx().createImageData(W, H), o = out.data, s = maskSrc;
+  for (let p = 0; p < W * H; p++) {
+    const i = p * 4, a = s[i + 3] / 255;
+    let r = s[i] * a + 15 * (1 - a), g = s[i + 1] * a + 10 * (1 - a), b = s[i + 2] * a + 18 * (1 - a);
+    if (mask[p]) { r = r * 0.45 + 232 * 0.55; g = g * 0.45 + 111 * 0.55; b = b * 0.45 + 154 * 0.55; }
+    o[i] = r; o[i + 1] = g; o[i + 2] = b; o[i + 3] = 255;
+  }
+  maskCtx().putImageData(out, 0, 0);
+}
+function floodMask(p0, val){
+  const stack = [p0];
+  while (stack.length) {
+    const p = stack.pop();
+    if (mask[p] === val || !isCand(p)) continue;
+    mask[p] = val;
+    const x = p % W, y = (p / W) | 0;
+    if (x > 0) stack.push(p - 1);
+    if (x < W - 1) stack.push(p + 1);
+    if (y > 0) stack.push(p - W);
+    if (y < H - 1) stack.push(p + W);
+  }
+}
+async function maskToBlob(){
+  const c = document.createElement("canvas"); c.width = W; c.height = H;
+  const x = c.getContext("2d"), id = x.createImageData(W, H);
+  for (let p = 0; p < W * H; p++) if (mask[p]) { const i = p * 4; id.data[i] = id.data[i + 1] = id.data[i + 2] = 255; id.data[i + 3] = 255; }
+  x.putImageData(id, 0, 0);
+  return canvasBlob(c);
+}
+$("maskCanvas").addEventListener("click", e => {
+  if (!maskSrc) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  const x = Math.floor((e.clientX - r.left) * W / r.width), y = Math.floor((e.clientY - r.top) * H / r.height);
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  const p = y * W + x;
+  if (!isCand(p)) { toast("Esa zona no es blanca ni gris claro"); return; }
+  floodMask(p, mask[p] ? 0 : 1); drawMask();
+});
+$("maskAll").addEventListener("click", () => { if (!maskSrc) return; for (let p = 0; p < W * H; p++) if (isCand(p)) mask[p] = 1; drawMask(); });
+$("maskClear").addEventListener("click", () => { if (!maskSrc) return; mask.fill(0); drawMask(); });
+$("tintToggle").addEventListener("change", updateMaskUI);
+$("tintMode").addEventListener("change", updateMaskUI);
+
+setupFields();
+renderList().then(refreshCode);
+</script>
+</body>
+</html>
